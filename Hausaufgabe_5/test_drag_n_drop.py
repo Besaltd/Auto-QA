@@ -5,7 +5,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 import pytest
-from time import sleep
 
 
 @pytest.fixture
@@ -25,21 +24,19 @@ def test_drag_and_drop(driver):
     except:
         pass
 
-    iframe = driver.find_element(By.CSS_SELECTOR, ".demo-frame")
-    driver.switch_to.frame(iframe)
 
-    trash = driver.find_element(By.ID, "trash")
-    first_img = driver.find_element(By.XPATH, "//img[contains(@alt, 'The peaks of High Tatras')]")
-    gallery_images = driver.find_elements(By.CSS_SELECTOR, "#gallery li h5:before")
+    wait = WebDriverWait(driver, 20)
+
+    frame = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "iframe.demo-frame")))
+    driver.switch_to.frame(frame)
+
+    source = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#gallery li")))[0]
+    trash = wait.until(EC.visibility_of_element_located((By.ID, "trash")))
 
     actions = ActionChains(driver)
-    actions.drag_and_drop(first_img, trash).release().perform()
+    actions.drag_and_drop(source, trash).release().perform()
 
-    for el in gallery_images:
-        print(el.text)
+    wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trash li")) == 1)
 
-    print(len(gallery_images))
-
-
-
-    assert len(gallery_images) == 3
+    assert len(driver.find_elements(By.CSS_SELECTOR, "#trash li")) == 1
+    assert len(driver.find_elements(By.CSS_SELECTOR, "#gallery li")) == 3
